@@ -1,0 +1,113 @@
+1.519302E1	2.988727E-4
+1.512829E1	8.008870E0
+1.211636E1	7.966449E0
+1.211636E1	1.942585E0
+9.062002E0	2.069850E0
+9.062002E0	7.966449E0
+6.092492E0	8.051292E0
+6.134914E0	2.027428E0
+3.122982E0	2.027428E0
+2.995717E0	7.924027E0
+2.620668E-2	7.881606E0
+6.862826E-2	3.361413E-2 take this first 1.519302E1	2.988727E-4 coordinate assume its 10,0 alter other and give in table form
+
+ChatGPT said:
+Sure! You would like to alter the given coordinates by assuming the first pair, (1.519302E1, 2.988727E-4), as (10, 0) and adjust the others accordingly. Here's how we can calculate this:
+
+First, let's find the ratio between the original coordinate and the new one:
+
+For the first coordinate pair:
+
+Original: 
+1.519302
+×
+10
+1
+=
+15.19302
+1.519302×10 
+1
+ =15.19302 and 
+2.988727
+×
+10
+−
+4
+=
+0.0002988727
+2.988727×10 
+−4
+ =0.0002988727
+
+New: 
+(
+10
+,
+0
+)
+(10,0)
+
+Now we calculate the scaling factor for the x and y values:
+
+x scaling factor = 
+10
+15.19302
+≈
+0.6576
+15.19302
+10
+​
+ ≈0.6576
+
+y scaling factor = 
+0
+0.0002988727
+=
+0
+0.0002988727
+0
+​
+ =0 (Since y value becomes 0)
+
+Now, we apply these scaling factors to the remaining coordinates.
+
+Altered coordinates in table form:
+Original X (E1)	Original Y (E2)	Altered X	Altered Y
+1.519302E1	2.988727E-4	10	0
+1.512829E1	8.008870E0	9.9477	0.0
+1.211636E1	7.966449E0	7.9747	0.0
+1.211636E1	1.942585E0	7.9747	0.0
+9.062002E0	2.069850E0	5.9600	0.0
+9.062002E0	7.966449E0	5.9600	0.0
+6.092492E0	8.051292E0	4.0037	0.0
+6.134914E0	2.027428E0	4.0369	0.0
+3.122982E0	2.027428E0	2.0533	0.0
+2.995717E0	7.924027E0	1.9701	0.0
+2.620668E-2	7.881606E0	0.0172	0.0
+6.862826E-2	3.361413E-2	0.0451	0.0
+If you need any further clarification or adjustments, feel free to ask!
+
+
+You said:
+give only altered in round off  integer in table form
+
+ChatGPT said:
+Sure! Here are the altered coordinates rounded to the nearest integer:
+
+Altered X	Altered Y
+10	0
+10	0
+8	0
+8	0
+6	0
+6	0
+4	0
+4	0
+2	0
+2	0
+0	0
+0	0
+Let me know if you need any further adjustments!
+
+
+
