@@ -1,0 +1,478 @@
+absolute square
+
+
+
+
+let points = [];
+let currentSegment = 0;
+let t = 0;             // Interpolation parameter (0 to 1) for current segment
+const duration = 2000; // Duration to trace the perimeter in milliseconds
+let lastMillis;
+let path = [];        // Array to store the path for the trace
+let blinkStartTime = 0;
+let blinkDuration = 500; // Duration for blinking coordinates in milliseconds
+let isBlinking = false;
+
+function setup() {
+  createCanvas(400, 400);
+  // Set up a white canvas
+  background(255);
+  
+  // Translate origin to bottom-left corner
+  translate(0, height);
+  scale(1, -1); // Flip the y-axis to match the desired coordinate system
+  
+  // Define the square vertices in absolute coordinates
+  points = [ createVector(0, 0), createVector(100, 0), createVector(100, 100), createVector(0, 100) ];
+  
+  lastMillis = millis();
+}
+
+function draw() {
+  // Compute elapsed time and update interpolation parameter
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  t += dt / duration;
+  
+  // If we've completed the current segment, move to the next
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % points.length;
+    blinkStartTime = currentMillis;
+    isBlinking = true;
+  }
+  lastMillis = currentMillis;
+  
+  // Determine the current segment's start and end points
+  let startPoint = points[currentSegment];  // Renamed to startPoint
+  let endPoint = points[(currentSegment + 1) % points.length];
+  
+  // Compute the current position along the segment using linear interpolation
+  let currentPos = p5.Vector.lerp(startPoint, endPoint, t);
+  
+  // Clear the canvas and redraw the square outline
+  background(255);
+  stroke(0);
+  noFill();
+  beginShape();
+  for (let pt of points) {
+    vertex(pt.x, pt.y);
+  }
+  endShape(CLOSE);
+  
+  // Draw the laser-like path in red
+  stroke(255, 0, 0);
+  strokeWeight(2);
+  for (let i = 1; i < path.length; i++) {
+    line(path[i - 1].x, path[i - 1].y, path[i].x, path[i].y);
+  }
+  path.push(createVector(currentPos.x, currentPos.y));
+  
+  // Draw the blinking coordinates at the corners
+  if (isBlinking && currentMillis - blinkStartTime < blinkDuration) {
+    fill(0);
+    textAlign(CENTER, CENTER);
+    textSize(12);
+    text(`(${startPoint.x}, ${startPoint.y})`, startPoint.x, startPoint.y - 10);  // Renamed to startPoint
+  } else {
+    isBlinking = false;
+  }
+}
+
+
+
+auto square 
+
+let points = [];
+let currentSegment = 0;
+let t = 0;             // Interpolation parameter (0 to 1) for current segment
+const duration = 2000; // Duration to trace the perimeter in milliseconds
+let lastMillis;
+let path = [];         // Array to store the path for the trace
+let blinkStartTime = 0;
+let blinkDuration = 500; // Duration for blinking coordinates in milliseconds
+let isBlinking = false;
+let originOffset;      // Declare originOffset globally
+let squareCenter;      // Square's center position
+
+function setup() {
+  createCanvas(400, 400);
+  background(255);
+  
+  // Initialize originOffset with center of canvas
+  originOffset = createVector(width / 2, height / 2);
+  
+  // Define the square vertices in absolute coordinates
+  points = [ createVector(-50, -50), createVector(50, -50), createVector(50, 50), createVector(-50, 50) ];
+  
+  // Set the center of the square
+  squareCenter = createVector(200, 200);
+  
+  lastMillis = millis();
+}
+
+function draw() {
+  // Compute elapsed time and update interpolation parameter
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  t += dt / duration;
+  
+  // If we've completed the current segment, move to the next
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % points.length;
+    blinkStartTime = currentMillis;
+    isBlinking = true;
+  }
+  lastMillis = currentMillis;
+  
+  // Determine the current segment's start and end points
+  let start = points[currentSegment];
+  let end = points[(currentSegment + 1) % points.length];
+  
+  // Compute the current position along the segment using linear interpolation
+  let currentPos = p5.Vector.lerp(start, end, t);
+  
+  // Clear the canvas and redraw the coordinate system and the square
+  background(255);
+  
+  // Draw the square (static in the center of the canvas)
+  drawSquare();
+  
+  // Draw the relative coordinate system axes at the current corner
+  drawAxes(currentPos);
+
+  // Draw the path of the square's motion
+  drawPath(currentPos);
+  
+  // Draw the blinking coordinates at the corners
+  if (isBlinking && currentMillis - blinkStartTime < blinkDuration) {
+    fill(0);
+    textAlign(CENTER, CENTER);
+    textSize(12);
+    text(`(${start.x}, ${start.y})`, start.x + squareCenter.x, start.y + squareCenter.y - 10);
+  } else {
+    isBlinking = false;
+  }
+}
+
+function drawAxes(currentPos) {
+  // Draw the axes at the current corner of the square
+  stroke(0);
+  strokeWeight(1);
+  
+  // Translate the axes to the current corner position
+  push();
+  translate(squareCenter.x + currentPos.x, squareCenter.y + currentPos.y);
+
+  // Draw the X-axis
+  line(-150, 0, 150, 0);  // Horizontal axis
+  
+  // Draw the Y-axis
+  line(0, -150, 0, 150);  // Vertical axis
+  
+  // Draw axis labels
+  fill(0);
+  textAlign(CENTER, CENTER);
+  textSize(12);
+  text('+X', 160, 0);
+  text('-X', -160, 0);
+  text('+Y', 0, 160);
+  text('-Y', 0, -160);
+  
+  pop();  // Restore previous transformation matrix
+}
+
+function drawSquare() {
+  // Draw the square outline at the center of the canvas
+  stroke(0);
+  noFill();
+  beginShape();
+  for (let pt of points) {
+    vertex(pt.x + squareCenter.x, pt.y + squareCenter.y);  // Position relative to the square's center
+  }
+  endShape(CLOSE);
+}
+
+function drawPath(currentPos) {
+  // Draw the laser-like path in red
+  stroke(255, 0, 0);
+  strokeWeight(2);
+  for (let i = 1; i < path.length; i++) {
+    line(path[i - 1].x + squareCenter.x, path[i - 1].y + squareCenter.y, path[i].x + squareCenter.x, path[i].y + squareCenter.y);
+  }
+  path.push(createVector(currentPos.x, currentPos.y));
+}
+
+
+
+gear satupid 
+
+
+
+let radius = 100;  // Radius of the gear
+let numTeeth = 12; // Number of teeth in the gear
+let angle = 0;     // Current angle of rotation
+let rotationSpeed = 0.01;  // Speed of rotation
+let originOffset;  // The center of the gear
+let gearCenter;    // The center where the gear rotates
+
+function setup() {
+  createCanvas(400, 400);
+  background(255);
+  
+  // Initialize the center of the gear
+  originOffset = createVector(width / 2, height / 2);
+  gearCenter = originOffset;  // The center of rotation (same as origin)
+}
+
+function draw() {
+  background(255);
+  
+  // Update the angle for rotation
+  angle += rotationSpeed;
+  
+  // Draw the gear with rotating teeth
+  drawGear();
+  
+  // Draw the axes moving with the gear's perimeter
+  drawAxes(angle);
+}
+
+function drawGear() {
+  stroke(0);
+  noFill();
+  
+  // Draw the base circle (the gear body)
+  ellipse(gearCenter.x, gearCenter.y, radius * 2, radius * 2);
+  
+  // Draw the gear teeth
+  let toothAngle = TWO_PI / numTeeth;
+  for (let i = 0; i < numTeeth; i++) {
+    let theta = toothAngle * i + angle;
+    let x1 = gearCenter.x + cos(theta) * radius;
+    let y1 = gearCenter.y + sin(theta) * radius;
+    
+    // Draw tooth as a small rectangle or line extending from the circle
+    let x2 = gearCenter.x + cos(theta) * (radius + 10); // Tooth length
+    let y2 = gearCenter.y + sin(theta) * (radius + 10);
+    
+    line(x1, y1, x2, y2);
+  }
+}
+
+function drawAxes(currentAngle) {
+  stroke(0);
+  strokeWeight(1);
+  
+  // Let's follow one tooth's position on the perimeter
+  let toothAngle = TWO_PI / numTeeth;
+  let theta = currentAngle % (TWO_PI / numTeeth);  // Current tooth position
+  
+  // Calculate the position of the selected tooth
+  let toothX = gearCenter.x + cos(theta) * radius;
+  let toothY = gearCenter.y + sin(theta) * radius;
+  
+  // Draw the axes at the position of the tooth
+  push();
+  translate(toothX, toothY);
+  
+  // Draw the X-axis
+  line(-50, 0, 50, 0);  // Horizontal axis
+  
+  // Draw the Y-axis
+  line(0, -50, 0, 50);  // Vertical axis
+  
+  // Draw axis labels
+  fill(0);
+  textAlign(CENTER, CENTER);
+  textSize(12);
+  text('+X', 60, 0);
+  text('-X', -60, 0);
+  text('+Y', 0, 60);
+  text('-Y', 0, -60);
+  
+  pop();  // Restore previous transformation matrix
+}
+
+
+
+
+relative square 
+
+
+let points = [];
+let currentSegment = 0;
+let t = 0;             // Interpolation parameter (0 to 1) for current segment
+const duration = 2000; // Duration to trace the perimeter in milliseconds
+let lastMillis;
+let path = [];         // Array to store the path for the trace
+let blinkStartTime = 0;
+let blinkDuration = 500; // Duration for blinking coordinates in milliseconds
+let isBlinking = false;
+let originOffset;      // Declare originOffset globally
+let squareCenter;      // Square's center position
+
+function setup() {
+  createCanvas(400, 400);
+  background(255);
+  
+  // Initialize originOffset with center of canvas
+  originOffset = createVector(width / 2, height / 2);
+  
+  // Define the square vertices in absolute coordinates
+  points = [ createVector(-50, -50), createVector(50, -50), createVector(50, 50), createVector(-50, 50) ];
+  
+  // Set the center of the square
+  squareCenter = createVector(200, 200);
+  
+  lastMillis = millis();
+}
+
+function draw() {
+  // Compute elapsed time and update interpolation parameter
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  t += dt / duration;
+  
+  // If we've completed the current segment, move to the next
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % points.length;
+    blinkStartTime = currentMillis;
+    isBlinking = true;
+  }
+  lastMillis = currentMillis;
+  
+  // Determine the current segment's start and end points
+  let start = points[currentSegment];
+  let end = points[(currentSegment + 1) % points.length];
+  
+  // Compute the current position along the segment using linear interpolation
+  let currentPos = p5.Vector.lerp(start, end, t);
+  
+  // Clear the canvas and redraw the coordinate system and the square
+  background(255);
+  
+  // Draw the square (static in the center of the canvas)
+  drawSquare();
+  
+  // Draw the relative coordinate system axes at the current corner
+  drawAxes(currentPos);
+
+  // Draw the path of the square's motion
+  drawPath(currentPos);
+  
+  // Draw the blinking coordinates at the corners
+  if (isBlinking && currentMillis - blinkStartTime < blinkDuration) {
+    fill(0);
+    textAlign(CENTER, CENTER);
+    textSize(12);
+    text(`(${start.x}, ${start.y})`, start.x + squareCenter.x, start.y + squareCenter.y - 10);
+  } else {
+    isBlinking = false;
+  }
+}
+
+function drawAxes(currentPos) {
+  // Draw the axes at the current corner of the square
+  stroke(0);
+  strokeWeight(1);
+  
+  // Translate the axes to the current corner position
+  push();
+  translate(squareCenter.x + currentPos.x, squareCenter.y + currentPos.y);
+
+  // Draw the X-axis
+  line(-150, 0, 150, 0);  // Horizontal axis
+  
+  // Draw the Y-axis
+  line(0, -150, 0, 150);  // Vertical axis
+  
+  // Draw axis labels
+  fill(0);
+  textAlign(CENTER, CENTER);
+  textSize(12);
+  text('+X', 160, 0);
+  text('-X', -160, 0);
+  text('+Y', 0, 160);
+  text('-Y', 0, -160);
+  
+  pop();  // Restore previous transformation matrix
+}
+
+function drawSquare() {
+  // Draw the square outline at the center of the canvas
+  stroke(0);
+  noFill();
+  beginShape();
+  for (let pt of points) {
+    vertex(pt.x + squareCenter.x, pt.y + squareCenter.y);  // Position relative to the square's center
+  }
+  endShape(CLOSE);
+}
+
+function drawPath(currentPos) {
+  // Draw the laser-like path in red
+  stroke(255, 0, 0);
+  strokeWeight(2);
+  for (let i = 1; i < path.length; i++) {
+    line(path[i - 1].x + squareCenter.x, path[i - 1].y + squareCenter.y, path[i].x + squareCenter.x, path[i].y + squareCenter.y);
+  }
+  path.push(createVector(currentPos.x, currentPos.y));
+}
+
+
+
+
+
+
+
+
+relative square correct coder auto cad 
+
+
+
+
+let points = [];
+let currentSegment = 0;
+let t = 0;             // Interpolation parameter (0 to 1) for current segment
+const duration = 2000; // Duration to trace the perimeter in milliseconds
+let lastMillis;
+let path = [];         // Array to store the path for the trace
+let blinkStartTime = 0;
+let blinkDuration = 500; // Duration for blinking coordinates in milliseconds
+let isBlinking = false;
+let originOffset;      // Declare originOffset globally
+let squareCenter;      // Square's center position
+
+function setup() {
+  createCanvas(400, 400);
+  background(255);
+  
+  // Initialize originOffset with center of canvas
+  originOffset = createVector(width / 2, height / 2);
+  
+  // Define the square vertices in absolute coordinates
+  points = [ createVector(-50, -50), createVector(50, -50), createVector(50, 50), createVector(-50, 50) ];
+  
+  // Set the center of the square
+  squareCenter = createVector(200, 200);
+  
+  lastMillis = millis();
+}
+
+function draw() {
+  // Compute elapsed time and update interpolation parameter
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  t += dt / duration;
+  
+  // If we've completed the current segment, move to the next
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % points.length;
+
+
+
+
