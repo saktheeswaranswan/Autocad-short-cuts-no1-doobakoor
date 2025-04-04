@@ -1,0 +1,38 @@
+let points = [];
+let currentSegment = 0;
+let t = 0;             // Interpolation parameter (0 to 1) for current segment
+const duration = 2000; // Duration to trace the perimeter in milliseconds
+let lastMillis;
+let path = [];         // Array to store the path for the trace
+let blinkStartTime = 0;
+let blinkDuration = 500; // Duration for blinking coordinates in milliseconds
+let isBlinking = false;
+let originOffset;      // Declare originOffset globally
+let squareCenter;      // Square's center position
+
+function setup() {
+  createCanvas(400, 400);
+  background(255);
+  
+  // Initialize originOffset with center of canvas
+  originOffset = createVector(width / 2, height / 2);
+  
+  // Define the square vertices in absolute coordinates
+  points = [ createVector(-50, -50), createVector(50, -50), createVector(50, 50), createVector(-50, 50) ];
+  
+  // Set the center of the square
+  squareCenter = createVector(200, 200);
+  
+  lastMillis = millis();
+}
+
+function draw() {
+  // Compute elapsed time and update interpolation parameter
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  t += dt / duration;
+  
+  // If we've completed the current segment, move to the next
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % points.length;

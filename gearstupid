@@ -1,0 +1,85 @@
+let radius = 100;  // Radius of the gear
+let numTeeth = 12; // Number of teeth in the gear
+let angle = 0;     // Current angle of rotation
+let rotationSpeed = 0.01;  // Speed of rotation
+let originOffset;  // The center of the gear
+let gearCenter;    // The center where the gear rotates
+
+function setup() {
+  createCanvas(400, 400);
+  background(255);
+  
+  // Initialize the center of the gear
+  originOffset = createVector(width / 2, height / 2);
+  gearCenter = originOffset;  // The center of rotation (same as origin)
+}
+
+function draw() {
+  background(255);
+  
+  // Update the angle for rotation
+  angle += rotationSpeed;
+  
+  // Draw the gear with rotating teeth
+  drawGear();
+  
+  // Draw the axes moving with the gear's perimeter
+  drawAxes(angle);
+}
+
+function drawGear() {
+  stroke(0);
+  noFill();
+  
+  // Draw the base circle (the gear body)
+  ellipse(gearCenter.x, gearCenter.y, radius * 2, radius * 2);
+  
+  // Draw the gear teeth
+  let toothAngle = TWO_PI / numTeeth;
+  for (let i = 0; i < numTeeth; i++) {
+    let theta = toothAngle * i + angle;
+    let x1 = gearCenter.x + cos(theta) * radius;
+    let y1 = gearCenter.y + sin(theta) * radius;
+    
+    // Draw tooth as a small rectangle or line extending from the circle
+    let x2 = gearCenter.x + cos(theta) * (radius + 10); // Tooth length
+    let y2 = gearCenter.y + sin(theta) * (radius + 10);
+    
+    line(x1, y1, x2, y2);
+  }
+}
+
+function drawAxes(currentAngle) {
+  stroke(0);
+  strokeWeight(1);
+  
+  // Let's follow one tooth's position on the perimeter
+  let toothAngle = TWO_PI / numTeeth;
+  let theta = currentAngle % (TWO_PI / numTeeth);  // Current tooth position
+  
+  // Calculate the position of the selected tooth
+  let toothX = gearCenter.x + cos(theta) * radius;
+  let toothY = gearCenter.y + sin(theta) * radius;
+  
+  // Draw the axes at the position of the tooth
+  push();
+  translate(toothX, toothY);
+  
+  // Draw the X-axis
+  line(-50, 0, 50, 0);  // Horizontal axis
+  
+  // Draw the Y-axis
+  line(0, -50, 0, 50);  // Vertical axis
+  
+  // Draw axis labels
+  fill(0);
+  textAlign(CENTER, CENTER);
+  textSize(12);
+  text('+X', 60, 0);
+  text('-X', -60, 0);
+  text('+Y', 0, 60);
+  text('-Y', 0, -60);
+  
+  pop();  // Restore previous transformation matrix
+}
+

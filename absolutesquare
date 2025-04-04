@@ -1,0 +1,76 @@
+let points = [];
+let currentSegment = 0;
+let t = 0;             // Interpolation parameter (0 to 1) for current segment
+const duration = 2000; // Duration to trace the perimeter in milliseconds
+let lastMillis;
+let path = [];        // Array to store the path for the trace
+let blinkStartTime = 0;
+let blinkDuration = 500; // Duration for blinking coordinates in milliseconds
+let isBlinking = false;
+
+function setup() {
+  createCanvas(400, 400);
+  // Set up a white canvas
+  background(255);
+  
+  // Translate origin to bottom-left corner
+  translate(0, height);
+  scale(1, -1); // Flip the y-axis to match the desired coordinate system
+  
+  // Define the square vertices in absolute coordinates
+  points = [ createVector(0, 0), createVector(100, 0), createVector(100, 100), createVector(0, 100) ];
+  
+  lastMillis = millis();
+}
+
+function draw() {
+  // Compute elapsed time and update interpolation parameter
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  t += dt / duration;
+  
+  // If we've completed the current segment, move to the next
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % points.length;
+    blinkStartTime = currentMillis;
+    isBlinking = true;
+  }
+  lastMillis = currentMillis;
+  
+  // Determine the current segment's start and end points
+  let startPoint = points[currentSegment];  // Renamed to startPoint
+  let endPoint = points[(currentSegment + 1) % points.length];
+  
+  // Compute the current position along the segment using linear interpolation
+  let currentPos = p5.Vector.lerp(startPoint, endPoint, t);
+  
+  // Clear the canvas and redraw the square outline
+  background(255);
+  stroke(0);
+  noFill();
+  beginShape();
+  for (let pt of points) {
+    vertex(pt.x, pt.y);
+  }
+  endShape(CLOSE);
+  
+  // Draw the laser-like path in red
+  stroke(255, 0, 0);
+  strokeWeight(2);
+  for (let i = 1; i < path.length; i++) {
+    line(path[i - 1].x, path[i - 1].y, path[i].x, path[i].y);
+  }
+  path.push(createVector(currentPos.x, currentPos.y));
+  
+  // Draw the blinking coordinates at the corners
+  if (isBlinking && currentMillis - blinkStartTime < blinkDuration) {
+    fill(0);
+    textAlign(CENTER, CENTER);
+    textSize(12);
+    text(`(${startPoint.x}, ${startPoint.y})`, startPoint.x, startPoint.y - 10);  // Renamed to startPoint
+  } else {
+    isBlinking = false;
+  }
+}
+
