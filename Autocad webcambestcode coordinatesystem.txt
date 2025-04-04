@@ -1,0 +1,162 @@
+let video;
+let baseSquare = [
+  {x: 0, y: 0},
+  {x: 100, y: 0},
+  {x: 100, y: 100},
+  {x: 0, y: 100},
+  {x: 0, y: 0}
+];
+let squarePoints = [];
+let scaleFactor = 1;
+let currentPointIndex = 0;
+let lineCoordinates = [];
+let lastUpdateTime = 0;
+let delay = 2000; // 2 seconds
+
+function setup() {
+  createCanvas(640, 480);
+  video = createCapture(VIDEO);
+  video.size(width, height);
+  video.hide();
+  resetSquare();
+}
+
+function draw() {
+  image(video, 0, 0, width, height);
+
+  // Draw the square path
+  stroke(0, 0, 255);
+  strokeWeight(2);
+  for (let i = 0; i < squarePoints.length - 1; i++) {
+    let p1 = squarePoints[i];
+    let p2 = squarePoints[i + 1];
+    line(p1.x, p1.y, p2.x, p2.y);
+  }
+
+  // Draw animated trace
+  if (lineCoordinates.length > 1) {
+    stroke(0, 255, 0);
+    let last = lineCoordinates[lineCoordinates.length - 2];
+    let current = lineCoordinates[lineCoordinates.length - 1];
+    line(last.x, last.y, current.x, current.y);
+  }
+
+  // Draw coordinate labels
+  fill(255, 255, 0);
+  noStroke();
+  textSize(12);
+  for (let i = 0; i < squarePoints.length - 1; i++) {
+    let p = squarePoints[i];
+    text(`(${int(p.x)}, ${int(p.y)})`, p.x + 5, p.y - 5);
+  }
+
+  // Show current move info
+  fill(255);
+  textSize(16);
+  if (currentPointIndex < squarePoints.length) {
+    let p = squarePoints[currentPointIndex];
+    text(`Moving to: (${int(p.x)}, ${int(p.y)})`, 10, 30);
+  } else {
+    text(`Animation complete. Resetting...`, 10, 30);
+  }
+
+  // Update animation every 2 seconds
+  if (millis() - lastUpdateTime > delay) {
+    lastUpdateTime = millis();
+
+    if (currentPointIndex < squarePoints.length) {
+      lineCoordinates.push(squarePoints[currentPointIndex]);
+      currentPointIndex++;
+    } else {
+      // Reset after completing animation
+      currentPointIndex = 0;
+      lineCoordinates = [squarePoints[0]];
+    }
+  }
+}
+
+function keyPressed() {
+  if (key === 's') {
+    scaleFactor *= 0.5;
+    resetSquare();
+    print(`Scaled down. New factor: ${scaleFactor}`);
+  } else if (key === 'b') {
+    scaleFactor *= 2;
+    resetSquare();
+    print(`Scaled up. New factor: ${scaleFactor}`);
+  }
+}
+
+function resetSquare() {
+  squarePoints = baseSquare.map(p => ({
+    x: p.x * scaleFactor,
+    y: p.y * scaleFactor
+  }));
+  currentPointIndex = 0;
+  lineCoordinates = [squarePoints[0]];
+}
+
+
+Autocad bets 
+
+let points = [
+  [15.19302, 0.0002988727],
+  [15.12829, 8.00887],
+  [12.11636, 7.966449],
+  [12.11636, 1.942585],
+  [9.062002, 2.06985],
+  [9.062002, 7.966449],
+  [6.092492, 8.051292],
+  [6.134914, 2.027428],
+  [3.122982, 2.027428],
+  [2.995717, 7.924027],
+  [0.02620668, 7.881606],
+  [0.06862826, 0.03361413]
+];
+
+let scaleFactor = 40;  // To enlarge and fit canvas
+let offset = 50;       // Margin from edges
+let currentIndex = 0;
+let lastUpdate = 0;
+let delay = 2000; // 2 seconds
+
+function setup() {
+  createCanvas(800, 600);
+}
+
+function draw() {
+  background(30);
+
+  // Draw all points and connect them
+  stroke(0, 100, 255);
+  strokeWeight(2);
+  noFill();
+  beginShape();
+  for (let p of points) {
+    vertex(p[0] * scaleFactor + offset, p[1] * scaleFactor + offset);
+  }
+  endShape(CLOSE);
+
+  // Draw current point
+  if (currentIndex < points.length) {
+    let x = points[currentIndex][0] * scaleFactor + offset;
+    let y = points[currentIndex][1] * scaleFactor + offset;
+
+    fill(0, 255, 0);
+    noStroke();
+    ellipse(x, y, 10, 10);
+
+    fill(255);
+    textSize(14);
+    text(`(${nf(points[currentIndex][0], 1, 2)}, ${nf(points[currentIndex][1], 1, 2)})`, x + 10, y - 10);
+  }
+
+  // Update every 2 seconds
+  if (millis() - lastUpdate > delay) {
+    lastUpdate = millis();
+    currentIndex++;
+    if (currentIndex >= points.length) {
+      currentIndex = 0;
+    }
+  }
+}
