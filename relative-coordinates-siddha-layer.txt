@@ -1,0 +1,519 @@
+let angle = 0;
+
+function setup() {
+  createCanvas(800, 600, WEBGL);
+}
+
+function draw() {
+  background(10);
+  rotateY(angle);
+  angle += 0.005;
+
+  // Lighting for moonlight effect
+  pointLight(255, 255, 255, 0, -400, 300);
+  ambientLight(60);
+
+  // Draw the three Titanic layers
+  drawLayer(-150, color(255, 0, 0), 10, "dance");
+  drawLayer(0, color(0, 0, 255), 20, "dine");
+  drawLayer(150, color(0, 255, 0), 20, "moonlight");
+}
+
+function drawLayer(yOffset, c, pairs, mode) {
+  push();
+  translate(0, yOffset, 0);
+  ambientMaterial(c);
+  for (let i = 0; i < pairs; i++) {
+    let x = (i % 5) * 100 - 200;
+    let z = floor(i / 5) * 100 - 100;
+
+    push();
+    translate(x, 0, z);
+
+    if (mode === "dance") {
+      drawStickPair();
+    } else if (mode === "dine" || mode === "moonlight") {
+      drawDiningPair();
+    }
+
+    pop();
+  }
+
+  // Draw deck floor
+  noStroke();
+  fill(red(c) * 0.5, green(c) * 0.5, blue(c) * 0.5, 150);
+  box(600, 10, 400);
+  pop();
+}
+
+function drawStickPair() {
+  stroke(255);
+  strokeWeight(2);
+  // Left stickman
+  line(-10, 0, 0, -10, -30, 0); // body
+  line(-10, -30, 0, -15, -50, 0); // head
+  line(-10, -20, 0, -20, -30, 0); // arm
+  line(-10, -20, 0, 0, -30, 0);   // arm
+
+  // Right stickwoman
+  line(10, 0, 0, 10, -30, 0); // body
+  line(10, -30, 0, 15, -50, 0); // head
+  line(10, -20, 0, 20, -30, 0); // arm
+  line(10, -20, 0, 0, -30, 0);  // arm
+}
+
+function drawDiningPair() {
+  // Table
+  noStroke();
+  fill(150, 100, 50);
+  box(40, 10, 40);
+
+  // Chairs
+  fill(100);
+  push(); translate(-20, 10, 0); box(10, 30, 10); pop();
+  push(); translate(20, 10, 0); box(10, 30, 10); pop();
+}
+
+
+
+
+
+let points = [];
+let currentSegment = 0;
+let t = 0;
+const duration = 4000;
+let lastMillis;
+let path = [];
+let originOffset;
+
+function setup() {
+  createCanvas(600, 600);
+  originOffset = createVector(width / 2, height / 2);
+  lastMillis = millis();
+
+  // Maze path
+  points = [
+    createVector(-200, -200),
+    createVector(200, -200),
+    createVector(200, -100),
+    createVector(-100, -100),
+    createVector(-100, 100),
+    createVector(150, 100),
+    createVector(150, 200),
+    createVector(-200, 200)
+  ];
+}
+
+function draw() {
+  background(255);
+
+  // Time update
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  lastMillis = currentMillis;
+
+  let segmentDuration = duration / (points.length - 1);
+  t += dt / segmentDuration;
+
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % (points.length - 1);
+  }
+
+  // Interpolate tracer position
+  let p0 = points[currentSegment];
+  let p1 = points[(currentSegment + 1) % points.length];
+  let tracer = p5.Vector.lerp(p0, p1, t);
+  let tracerScreen = tracer.copy().add(originOffset);
+  path.push(tracerScreen.copy());
+
+  // Draw full maze path
+  stroke(0);
+  noFill();
+  strokeWeight(1);
+  beginShape();
+  for (let p of points) {
+    vertex(p.x + originOffset.x, p.y + originOffset.y);
+  }
+  endShape();
+
+  // ✳️ Draw moving grid (grid follows the tracer)
+  drawMovingGrid(tracer);
+
+  // 🔵 Draw path
+  stroke(0, 150, 255);
+  noFill();
+  beginShape();
+  for (let p of path) {
+    vertex(p.x, p.y);
+  }
+  endShape();
+
+  // 🔴 Draw tracer
+  fill(255, 0, 0);
+  noStroke();
+  ellipse(tracerScreen.x, tracerScreen.y, 10);
+
+  // 💬 Show current tracer coordinates
+  fill(0);
+  textAlign(LEFT, BOTTOM);
+  textSize(14);
+  text(`Tracer: (${Math.round(tracer.x)}, ${Math.round(tracer.y)})`, 10, height - 10);
+}
+
+function drawMovingGrid(tracer) {
+  const gridSize = 25;
+  const axisLength = 400;
+  const tickSize = 5;
+
+  let tracerScreen = tracer.copy().add(originOffset);
+
+  strokeWeight(1);
+  textSize(10);
+  fill(0);
+
+  // Draw horizontal grid lines
+  for (let i = -axisLength; i <= axisLength; i += gridSize) {
+    let y = tracerScreen.y + i;
+    stroke(240);
+    line(0, y, width, y);
+
+    if (i !== 0) {
+      stroke(0);
+      line(tracerScreen.x - tickSize, y, tracerScreen.x + tickSize, y);
+      noStroke();
+      text(`${Math.round(tracer.y + i)}`, tracerScreen.x + tickSize + 2, y + 3);
+    }
+  }
+
+  // Draw vertical grid lines
+  for (let i = -axisLength; i <= axisLength; i += gridSize) {
+    let x = tracerScreen.x + i;
+    stroke(240);
+    line(x, 0, x, height);
+
+    if (i !== 0) {
+      stroke(0);
+      line(x, tracerScreen.y - tickSize, x, tracerScreen.y + tickSize);
+      noStroke();
+      textAlign(CENTER, TOP);
+      text(`${Math.round(tracer.x + i)}`, x, tracerScreen.y + tickSize + 2);
+    }
+  }
+
+  // Main axis lines
+  stroke(0);
+  strokeWeight(2);
+  line(tracerScreen.x - axisLength, tracerScreen.y, tracerScreen.x + axisLength, tracerScreen.y); // X-axis
+  line(tracerScreen.x, tracerScreen.y - axisLength, tracerScreen.x, tracerScreen.y + axisLength); // Y-axis
+
+  // Axis origin label
+  noStroke();
+  fill(0);
+  textAlign(LEFT, TOP);
+  text(`(${Math.round(tracer.x)}, ${Math.round(tracer.y)})`, tracerScreen.x + 5, tracerScreen.y + 5);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let points = [];
+let currentSegment = 0;
+let t = 0;
+const duration = 4000;
+let lastMillis;
+let path = [];
+let originOffset;
+
+function setup() {
+  createCanvas(600, 600);
+  originOffset = createVector(width / 2, height / 2);
+  lastMillis = millis();
+
+  // Maze path
+  points = [
+    createVector(-200, -200),
+    createVector(200, -200),
+    createVector(200, -100),
+    createVector(-100, -100),
+    createVector(-100, 100),
+    createVector(150, 100),
+    createVector(150, 200),
+    createVector(-200, 200)
+  ];
+}
+
+function draw() {
+  background(255);
+
+  // Time update
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  lastMillis = currentMillis;
+
+  let segmentDuration = duration / (points.length - 1);
+  t += dt / segmentDuration;
+
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % (points.length - 1);
+  }
+
+  // Interpolate tracer position
+  let p0 = points[currentSegment];
+  let p1 = points[(currentSegment + 1) % points.length];
+  let tracer = p5.Vector.lerp(p0, p1, t);
+  let tracerScreen = tracer.copy().add(originOffset);
+  path.push(tracerScreen.copy());
+
+  // Draw full maze path
+  stroke(0);
+  noFill();
+  strokeWeight(1);
+  beginShape();
+  for (let p of points) {
+    vertex(p.x + originOffset.x, p.y + originOffset.y);
+  }
+  endShape();
+
+  // ✳️ Draw moving grid (grid follows the tracer)
+  drawMovingGrid(tracer);
+
+  // 🔵 Draw path
+  stroke(0, 150, 255);
+  noFill();
+  beginShape();
+  for (let p of path) {
+    vertex(p.x, p.y);
+  }
+  endShape();
+
+  // 🔴 Draw tracer
+  fill(255, 0, 0);
+  noStroke();
+  ellipse(tracerScreen.x, tracerScreen.y, 10);
+
+  // 💬 Show current tracer coordinates
+  fill(0);
+  textAlign(LEFT, BOTTOM);
+  textSize(14);
+  text(`Tracer: (${Math.round(tracer.x)}, ${Math.round(tracer.y)})`, 10, height - 10);
+}
+
+function drawMovingGrid(tracer) {
+  const gridSize = 25;
+  const axisLength = 400;
+  const tickSize = 5;
+
+  let tracerScreen = tracer.copy().add(originOffset);
+
+  strokeWeight(1);
+  textSize(10);
+  fill(0);
+
+  // Draw horizontal grid lines
+  for (let i = -axisLength; i <= axisLength; i += gridSize) {
+    let y = tracerScreen.y + i;
+    stroke(240);
+    line(0, y, width, y);
+
+    if (i !== 0) {
+      stroke(0);
+      line(tracerScreen.x - tickSize, y, tracerScreen.x + tickSize, y);
+      noStroke();
+      text(`${Math.round(tracer.y + i)}`, tracerScreen.x + tickSize + 2, y + 3);
+    }
+  }
+
+  // Draw vertical grid lines
+  for (let i = -axisLength; i <= axisLength; i += gridSize) {
+    let x = tracerScreen.x + i;
+    stroke(240);
+    line(x, 0, x, height);
+
+    if (i !== 0) {
+      stroke(0);
+      line(x, tracerScreen.y - tickSize, x, tracerScreen.y + tickSize);
+      noStroke();
+      textAlign(CENTER, TOP);
+      text(`${Math.round(tracer.x + i)}`, x, tracerScreen.y + tickSize + 2);
+    }
+  }
+
+  // Main axis lines
+  stroke(0);
+  strokeWeight(2);
+  line(tracerScreen.x - axisLength, tracerScreen.y, tracerScreen.x + axisLength, tracerScreen.y); // X-axis
+  line(tracerScreen.x, tracerScreen.y - axisLength, tracerScreen.x, tracerScreen.y + axisLength); // Y-axis
+
+  // Axis origin label
+  noStroke();
+  fill(0);
+  textAlign(LEFT, TOP);
+  text(`(${Math.round(tracer.x)}, ${Math.round(tracer.y)})`, tracerScreen.x + 5, tracerScreen.y + 5);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+let danceAngle = 0;
+let showDance = true;
+let showDine = true;
+let showMoonlight = true;
+
+function setup() {
+  createCanvas(800, 600, WEBGL);
+
+  // Create Buttons
+  createButton("Toggle Dance Floor (Red)")
+    .position(10, 10)
+    .mousePressed(() => showDance = !showDance);
+
+  createButton("Toggle Dining Room (Blue)")
+    .position(10, 40)
+    .mousePressed(() => showDine = !showDine);
+
+  createButton("Toggle Moonlight Dinner (Green)")
+    .position(10, 70)
+    .mousePressed(() => showMoonlight = !showMoonlight);
+}
+
+function draw() {
+  background(10);
+  orbitControl();
+  danceAngle += 0.05;
+
+  // Simulated moonlight
+  pointLight(255, 255, 255, 0, -400, 300);
+  ambientLight(60);
+
+  // Conditionally render each layer
+  if (showDance) {
+    drawLayer(-150, color(255, 0, 0), 10, "dance", danceAngle);
+  }
+  if (showDine) {
+    drawLayer(0, color(0, 0, 255), 20, "dine");
+  }
+  if (showMoonlight) {
+    drawLayer(150, color(0, 255, 0), 20, "moonlight");
+  }
+}
+
+// Generalized layer renderer
+function drawLayer(yOffset, c, pairs, mode, rAngle = 0) {
+  push();
+  translate(0, yOffset, 0);
+  ambientMaterial(c);
+
+  for (let i = 0; i < pairs; i++) {
+    let x = (i % 5) * 100 - 200;
+    let z = floor(i / 5) * 100 - 100;
+
+    push();
+    translate(x, 0, z);
+
+    if (mode === "dance") {
+      rotateY(rAngle + i); // Animate each dancing couple
+      drawStickPair();
+    } else if (mode === "dine" || mode === "moonlight") {
+      drawDiningPair();
+    }
+
+    pop();
+  }
+
+  // Deck floor
+  noStroke();
+  fill(red(c) * 0.5, green(c) * 0.5, blue(c) * 0.5, 150);
+  box(600, 10, 400);
+  pop();
+}
+
+// Dancing couple
+function drawStickPair() {
+  stroke(255);
+  strokeWeight(2);
+
+  // Left stickman
+  line(-10, 0, 0, -10, -30, 0);
+  line(-10, -30, 0, -15, -50, 0);
+  line(-10, -20, 0, -20, -30, 0);
+  line(-10, -20, 0, 0, -30, 0);
+
+  // Right stickwoman
+  line(10, 0, 0, 10, -30, 0);
+  line(10, -30, 0, 15, -50, 0);
+  line(10, -20, 0, 20, -30, 0);
+  line(10, -20, 0, 0, -30, 0);
+}
+
+// Dining pair
+function drawDiningPair() {
+  noStroke();
+  fill(150, 100, 50);
+  box(40, 10, 40); // table
+
+  fill(100);
+  push(); translate(-20, 10, 0); box(10, 30, 10); pop(); // left chair
+  push(); translate(20, 10, 0); box(10, 30, 10); pop();  // right chair
+}
