@@ -1,0 +1,277 @@
+let capture;
+let points = [];
+let currentSegment = 0;
+let t = 0;
+let lastMillis;
+
+const gridSize      = 50;
+const moveDuration  = 1000;  // ms to move between vertices
+const pauseDuration = 2000;  // ms to pause at each vertex
+
+let isPaused   = false;
+let pauseStart = 0;
+
+function setup() {
+  createCanvas(500, 500);
+  // start webcam capture
+  capture = createCapture(VIDEO);
+  capture.size(width, height);
+  capture.hide(); 
+
+  lastMillis = millis();
+
+  // Define a 4×4–step square around (0,0) in GRID UNITS:
+  // (-2,-2)->(2,-2)->(2,2)->(-2,2)->back
+  points = [
+    createVector(-2, -2),
+    createVector( 2, -2),
+    createVector( 2,  2),
+    createVector(-2,  2),
+    createVector(-2, -2)
+  ].map(v => p5.Vector.mult(v, gridSize));
+}
+
+function draw() {
+  // draw live video background
+  image(capture, 0, 0, width, height);
+
+  let now = millis();
+  let dt  = now - lastMillis;
+  lastMillis = now;
+
+  // handle pause at each vertex
+  if (isPaused) {
+    if (now - pauseStart >= pauseDuration) {
+      isPaused = false;
+      t = 0;
+    } else {
+      drawMovingScene(points[currentSegment]);
+      return;
+    }
+  }
+
+  // advance interpolation
+  t += dt / moveDuration;
+  if (t >= 1) {
+    currentSegment = (currentSegment + 1) % (points.length - 1);
+    isPaused       = true;
+    pauseStart     = now;
+    t = 1;
+  }
+
+  // interpolate between segment endpoints
+  let p0  = points[currentSegment];
+  let p1  = points[currentSegment + 1];
+  let pos = p5.Vector.lerp(p0, p1, t);
+
+  drawMovingScene(pos);
+}
+
+function drawMovingScene(pos) {
+  // pos = world-coords of tracer in pixels
+  let center = createVector(width/2, height/2);
+  let offset = p5.Vector.sub(center, pos);
+
+  // draw moving grid underneath
+  drawGrid(offset);
+
+  // draw square path
+  noFill();
+  stroke(0);
+  strokeWeight(2);
+  beginShape();
+  for (let v of points) {
+    vertex(v.x + offset.x, v.y + offset.y);
+  }
+  endShape();
+
+  // draw tracer at center
+  drawTracer(center);
+}
+
+function drawGrid(offset) {
+  stroke(220);
+  textSize(10);
+  fill(0);
+
+  // vertical lines + x-labels
+  for (let x = -width; x <= width; x += gridSize) {
+    let sx = offset.x + x;
+    line(sx, 0, sx, height);
+    textAlign(CENTER, TOP);
+    let gx = (sx - width/2) / gridSize;
+    text(nf(gx, 0, 0), sx, height/2 + 2);
+  }
+
+  // horizontal lines + y-labels
+  for (let y = -height; y <= height; y += gridSize) {
+    let sy = offset.y + y;
+    line(0, sy, width, sy);
+    textAlign(LEFT, CENTER);
+    let gy = -(sy - height/2) / gridSize;
+    text(nf(gy, 0, 0), width/2 + 2, sy);
+  }
+}
+
+function drawTracer(center) {
+  // moving cross-axes through tracer
+  stroke(0);
+  strokeWeight(1.5);
+  line(0, center.y, width, center.y);
+  line(center.x, 0, center.x, height);
+
+  // red dot
+  noStroke();
+  fill(255, 0, 0);
+  ellipse(center.x, center.y, 12);
+
+  // label (0,0)
+  fill(0);
+  textSize(12);
+  textAlign(LEFT, TOP);
+  text(`(0, 0)`, center.x + 5, center.y + 5);
+}
+
+
+
+
+
+
+
+
+
+
+
+let capture;
+let points = [];
+let currentSegment = 0;
+let t = 0;
+let lastMillis;
+
+const gridSize      = 50;
+const moveDuration  = 1000;  // ms to move between vertices
+const pauseDuration = 2000;  // ms to pause at each vertex
+
+let isPaused   = false;
+let pauseStart = 0;
+
+function setup() {
+  createCanvas(500, 500);
+  // start webcam capture
+  capture = createCapture(VIDEO);
+  capture.size(width, height);
+  capture.hide(); 
+
+  lastMillis = millis();
+
+  // Define a 4×4–step square around (0,0) in GRID UNITS:
+  // (-2,-2)->(2,-2)->(2,2)->(-2,2)->back
+  points = [
+    createVector(-20, -20),
+    createVector( 2, -2),
+    createVector( 2,  2),
+    createVector(-2,  2),
+    createVector(-20, -20)
+  ].map(v => p5.Vector.mult(v, gridSize));
+}
+
+function draw() {
+  // draw live video background
+  image(capture, 0, 0, width, height);
+
+  let now = millis();
+  let dt  = now - lastMillis;
+  lastMillis = now;
+
+  // handle pause at each vertex
+  if (isPaused) {
+    if (now - pauseStart >= pauseDuration) {
+      isPaused = false;
+      t = 0;
+    } else {
+      drawMovingScene(points[currentSegment]);
+      return;
+    }
+  }
+
+  // advance interpolation
+  t += dt / moveDuration;
+  if (t >= 1) {
+    currentSegment = (currentSegment + 1) % (points.length - 1);
+    isPaused       = true;
+    pauseStart     = now;
+    t = 1;
+  }
+
+  // interpolate between segment endpoints
+  let p0  = points[currentSegment];
+  let p1  = points[currentSegment + 1];
+  let pos = p5.Vector.lerp(p0, p1, t);
+
+  drawMovingScene(pos);
+}
+
+function drawMovingScene(pos) {
+  // pos = world-coords of tracer in pixels
+  let center = createVector(width/2, height/2);
+  let offset = p5.Vector.sub(center, pos);
+
+  // draw moving grid underneath
+  drawGrid(offset);
+
+  // draw square path
+  noFill();
+  stroke(0);
+  strokeWeight(2);
+  beginShape();
+  for (let v of points) {
+    vertex(v.x + offset.x, v.y + offset.y);
+  }
+  endShape();
+
+  // draw tracer at center
+  drawTracer(center);
+}
+
+function drawGrid(offset) {
+  stroke(220);
+  textSize(10);
+  fill(0);
+
+  // vertical lines + x-labels
+  for (let x = -width; x <= width; x += gridSize) {
+    let sx = offset.x + x;
+    line(sx, 0, sx, height);
+    textAlign(CENTER, TOP);
+    let gx = (sx - width/2) / gridSize;
+    text(nf(gx, 0, 0), sx, height/2 + 2);
+  }
+
+  // horizontal lines + y-labels
+  for (let y = -height; y <= height; y += gridSize) {
+    let sy = offset.y + y;
+    line(0, sy, width, sy);
+    textAlign(LEFT, CENTER);
+    let gy = -(sy - height/2) / gridSize;
+    text(nf(gy, 0, 0), width/2 + 2, sy);
+  }
+}
+
+function drawTracer(center) {
+  // moving cross-axes through tracer
+  stroke(0);
+  strokeWeight(1.5);
+  line(0, center.y, width, center.y);
+  line(center.x, 0, center.x, height);
+
+  // red dot
+  noStroke();
+  fill(255, 0, 0);
+  ellipse(center.x, center.y, 12);
+
+  // label (0,0)
+  fill(0);
+  textSize(12);
+  textAlign(LEFT, TOP);
+  text(`(0, 0)`, center.x + 5, center.y + 5);
+}
