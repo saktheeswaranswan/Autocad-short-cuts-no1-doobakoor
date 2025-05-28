@@ -1,0 +1,125 @@
+let points = [];
+let currentSegment = 0;
+let t = 0;
+const duration = 4000;
+let lastMillis;
+let path = [];
+let scaleFactor;
+let originOffset;
+
+function setup() {
+  createCanvas(500, 500);
+  originOffset = createVector(width / 2, height / 2);
+  scaleFactor = width / 14; // since x goes from -7 to 7
+
+  lastMillis = millis();
+
+  // Define maze path in grid coordinates (-7 to 7, 8 to -8)
+  points = [
+    createVector(-6, 6),
+    createVector(6, 6),
+    createVector(6, 4),
+    createVector(-3, 4),
+    createVector(-3, -4),
+    createVector(4.5, -4),
+    createVector(4.5, -6),
+    createVector(-6, -6)
+  ];
+}
+
+function draw() {
+  background(255);
+  drawGridAndAxes();
+
+  // Time update
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  lastMillis = currentMillis;
+
+  let segmentDuration = duration / (points.length - 1);
+  t += dt / segmentDuration;
+
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % (points.length - 1);
+  }
+
+  // Interpolate tracer position
+  let p0 = points[currentSegment];
+  let p1 = points[(currentSegment + 1) % points.length];
+  let tracer = p5.Vector.lerp(p0, p1, t);
+  let tracerScreen = toScreen(tracer);
+  path.push(tracerScreen.copy());
+
+  // Draw path traced by tracer
+  stroke(0, 150, 255);
+  noFill();
+  beginShape();
+  for (let p of path) {
+    vertex(p.x, p.y);
+  }
+  endShape();
+
+  // Draw moving axis at tracer position
+  let axisSize = 0.5;
+  stroke(100);
+  strokeWeight(1);
+  line(
+    toScreenX(tracer.x - axisSize), tracerScreen.y,
+    toScreenX(tracer.x + axisSize), tracerScreen.y
+  );
+  line(
+    tracerScreen.x, toScreenY(tracer.y - axisSize),
+    tracerScreen.x, toScreenY(tracer.y + axisSize)
+  );
+
+  // Coordinates next to tracer
+  noStroke();
+  fill(0);
+  textSize(12);
+  textAlign(LEFT, TOP);
+  text(`(${tracer.x.toFixed(1)}, ${tracer.y.toFixed(1)})`, tracerScreen.x + 5, tracerScreen.y + 5);
+
+  // Tracer
+  fill(255, 0, 0);
+  noStroke();
+  ellipse(tracerScreen.x, tracerScreen.y, 10);
+
+  // Fixed tracer position info
+  fill(0);
+  textAlign(LEFT, BOTTOM);
+  textSize(14);
+  text(`Tracer: (${tracer.x.toFixed(1)}, ${tracer.y.toFixed(1)})`, 10, height - 10);
+}
+
+function drawGridAndAxes() {
+  stroke(220);
+  strokeWeight(1);
+  // Draw grid lines
+  for (let x = -7; x <= 7; x++) {
+    let sx = toScreenX(x);
+    line(sx, 0, sx, height);
+  }
+  for (let y = -8; y <= 8; y++) {
+    let sy = toScreenY(y);
+    line(0, sy, width, sy);
+  }
+
+  // Axes
+  stroke(0);
+  strokeWeight(2);
+  line(toScreenX(-7), toScreenY(0), toScreenX(7), toScreenY(0)); // X-axis
+  line(toScreenX(0), toScreenY(-8), toScreenX(0), toScreenY(8)); // Y-axis
+}
+
+function toScreen(pos) {
+  return createVector(toScreenX(pos.x), toScreenY(pos.y));
+}
+
+function toScreenX(x) {
+  return originOffset.x + x * scaleFactor;
+}
+
+function toScreenY(y) {
+  return originOffset.y - y * scaleFactor; // y is flipped
+}
