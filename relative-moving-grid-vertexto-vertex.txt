@@ -9,10 +9,10 @@ let tracer = null;
 
 function setup() {
   createCanvas(500, 500);
-  scaleFactor = width / 14; // for -7 to 7 range in X
+  scaleFactor = width / 14; // Logical width from -7 to 7 in X
   lastMillis = millis();
 
-  // Maze path (in logical coordinates)
+  // Maze path (logical coordinates)
   points = [
     createVector(-6, 6),
     createVector(6, 6),
@@ -41,23 +41,23 @@ function draw() {
     currentSegment = (currentSegment + 1) % (points.length - 1);
   }
 
-  // Interpolate tracer position (in logical coordinates)
+  // Interpolate tracer position (logical coordinates)
   let p0 = points[currentSegment];
   let p1 = points[(currentSegment + 1) % points.length];
   tracer = p5.Vector.lerp(p0, p1, t);
 
-  // Update originOffset so tracer stays centered
+  // Calculate dynamic offset to center the tracer
   let tracerScreen = toScreen(tracer);
   let center = createVector(width / 2, height / 2);
-  let screenOffset = p5.Vector.sub(center, tracerScreen);
-  let originOffset = screenOffset.copy();
+  let originOffset = p5.Vector.sub(center, tracerScreen);
 
-  // Record screen-space path
+  // Record path in screen space
   path.push(toScreen(tracer, originOffset));
 
+  // Draw grid and axes
   drawGridAndAxes(originOffset);
 
-  // Draw path
+  // Draw traced path
   stroke(0, 150, 255);
   noFill();
   beginShape();
@@ -66,27 +66,27 @@ function draw() {
   }
   endShape();
 
-  // Moving axis
+  // Draw tracer local axes
   let tracerPos = toScreen(tracer, originOffset);
   let axisSize = scaleFactor * 0.5;
   stroke(100);
   strokeWeight(1);
-  line(tracerPos.x - axisSize, tracerPos.y, tracerPos.x + axisSize, tracerPos.y);
-  line(tracerPos.x, tracerPos.y - axisSize, tracerPos.x, tracerPos.y + axisSize);
+  line(tracerPos.x - axisSize, tracerPos.y, tracerPos.x + axisSize, tracerPos.y); // X-axis
+  line(tracerPos.x, tracerPos.y - axisSize, tracerPos.x, tracerPos.y + axisSize); // Y-axis
 
-  // Coordinates at tracer
+  // Show coordinates near tracer
   noStroke();
   fill(0);
   textSize(12);
   textAlign(LEFT, TOP);
   text(`(${tracer.x.toFixed(1)}, ${tracer.y.toFixed(1)})`, tracerPos.x + 5, tracerPos.y + 5);
 
-  // Tracer dot
+  // Draw red tracer dot
   fill(255, 0, 0);
   noStroke();
   ellipse(tracerPos.x, tracerPos.y, 10);
 
-  // Fixed display
+  // Fixed corner coordinate display
   fill(0);
   textAlign(LEFT, BOTTOM);
   textSize(14);
@@ -96,16 +96,20 @@ function draw() {
 function drawGridAndAxes(offset) {
   stroke(220);
   strokeWeight(1);
+
+  // Vertical lines
   for (let x = -7; x <= 7; x++) {
     let sx = toScreenX(x, offset);
     line(sx, 0, sx, height);
   }
+
+  // Horizontal lines
   for (let y = -8; y <= 8; y++) {
     let sy = toScreenY(y, offset);
     line(0, sy, width, sy);
   }
 
-  // Axes
+  // Bold axes
   stroke(0);
   strokeWeight(2);
   line(toScreenX(-7, offset), toScreenY(0, offset), toScreenX(7, offset), toScreenY(0, offset)); // X-axis
