@@ -1,0 +1,125 @@
+let points = [];
+let currentSegment = 0;
+let t = 0;
+const duration = 4000;
+let lastMillis;
+let path = [];
+let scaleFactor;
+let tracer = null;
+
+function setup() {
+  createCanvas(500, 500);
+  scaleFactor = width / 14; // for -7 to 7 range in X
+  lastMillis = millis();
+
+  // Maze path (in logical coordinates)
+  points = [
+    createVector(-6, 6),
+    createVector(6, 6),
+    createVector(6, 4),
+    createVector(-3, 4),
+    createVector(-3, -4),
+    createVector(4.5, -4),
+    createVector(4.5, -6),
+    createVector(-6, -6)
+  ];
+}
+
+function draw() {
+  background(255);
+
+  // Time update
+  let currentMillis = millis();
+  let dt = currentMillis - lastMillis;
+  lastMillis = currentMillis;
+
+  let segmentDuration = duration / (points.length - 1);
+  t += dt / segmentDuration;
+
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % (points.length - 1);
+  }
+
+  // Interpolate tracer position (in logical coordinates)
+  let p0 = points[currentSegment];
+  let p1 = points[(currentSegment + 1) % points.length];
+  tracer = p5.Vector.lerp(p0, p1, t);
+
+  // Update originOffset so tracer stays centered
+  let tracerScreen = toScreen(tracer);
+  let center = createVector(width / 2, height / 2);
+  let screenOffset = p5.Vector.sub(center, tracerScreen);
+  let originOffset = screenOffset.copy();
+
+  // Record screen-space path
+  path.push(toScreen(tracer, originOffset));
+
+  drawGridAndAxes(originOffset);
+
+  // Draw path
+  stroke(0, 150, 255);
+  noFill();
+  beginShape();
+  for (let p of path) {
+    vertex(p.x, p.y);
+  }
+  endShape();
+
+  // Moving axis
+  let tracerPos = toScreen(tracer, originOffset);
+  let axisSize = scaleFactor * 0.5;
+  stroke(100);
+  strokeWeight(1);
+  line(tracerPos.x - axisSize, tracerPos.y, tracerPos.x + axisSize, tracerPos.y);
+  line(tracerPos.x, tracerPos.y - axisSize, tracerPos.x, tracerPos.y + axisSize);
+
+  // Coordinates at tracer
+  noStroke();
+  fill(0);
+  textSize(12);
+  textAlign(LEFT, TOP);
+  text(`(${tracer.x.toFixed(1)}, ${tracer.y.toFixed(1)})`, tracerPos.x + 5, tracerPos.y + 5);
+
+  // Tracer dot
+  fill(255, 0, 0);
+  noStroke();
+  ellipse(tracerPos.x, tracerPos.y, 10);
+
+  // Fixed display
+  fill(0);
+  textAlign(LEFT, BOTTOM);
+  textSize(14);
+  text(`Tracer: (${tracer.x.toFixed(1)}, ${tracer.y.toFixed(1)})`, 10, height - 10);
+}
+
+function drawGridAndAxes(offset) {
+  stroke(220);
+  strokeWeight(1);
+  for (let x = -7; x <= 7; x++) {
+    let sx = toScreenX(x, offset);
+    line(sx, 0, sx, height);
+  }
+  for (let y = -8; y <= 8; y++) {
+    let sy = toScreenY(y, offset);
+    line(0, sy, width, sy);
+  }
+
+  // Axes
+  stroke(0);
+  strokeWeight(2);
+  line(toScreenX(-7, offset), toScreenY(0, offset), toScreenX(7, offset), toScreenY(0, offset)); // X-axis
+  line(toScreenX(0, offset), toScreenY(-8, offset), toScreenX(0, offset), toScreenY(8, offset)); // Y-axis
+}
+
+function toScreen(pos, offset) {
+  return createVector(toScreenX(pos.x, offset), toScreenY(pos.y, offset));
+}
+
+function toScreenX(x, offset) {
+  return x * scaleFactor + width / 2 + offset.x;
+}
+
+function toScreenY(y, offset) {
+  return -y * scaleFactor + height / 2 + offset.y;
+}
