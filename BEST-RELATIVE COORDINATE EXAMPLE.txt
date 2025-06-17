@@ -1,0 +1,112 @@
+// p5.js sketch: finite grid animation with finite path, blinking axes
+let points = [];
+let currentSegment = 0;
+let t = 0;
+const duration = 2000;
+let lastMillis;
+let pathPoints = [];
+const maxPathLength = 500;
+let blinkStart = 0;
+const blinkDuration = 500;
+let isBlinking = false;
+
+// Grid settings
+const unitRange = 50;
+const unitSize = 4; // pixels per unit (1 cm)
+
+function setup() {
+  createCanvas(400, 400);
+  // Define square vertices
+  points = [
+    createVector(-unitRange, -unitRange),
+    createVector(unitRange, -unitRange),
+    createVector(unitRange, unitRange),
+    createVector(-unitRange, unitRange)
+  ];
+  lastMillis = millis();
+}
+
+function draw() {
+  const now = millis();
+  let delta = now - lastMillis;
+  t += delta / duration;
+  if (t >= 1) {
+    t = 0;
+    currentSegment = (currentSegment + 1) % points.length;
+    blinkStart = now;
+    isBlinking = true;
+  }
+  lastMillis = now;
+
+  const segStart = points[currentSegment];
+  const segEnd = points[(currentSegment + 1) % points.length];
+  const pos = p5.Vector.lerp(segStart, segEnd, t);
+
+  background(255);
+  drawGrid();
+  drawPath(pos);
+  drawAxes(pos, segStart, now);
+}
+
+function drawGrid() {
+  stroke(200);
+  strokeWeight(1);
+  for (let i = -unitRange; i <= unitRange; i++) {
+    let x = width/2 + i * unitSize;
+    line(x, 0, x, height);
+    let y = height/2 + i * unitSize;
+    line(0, y, width, y);
+  }
+}
+
+function drawPath(pos) {
+  // Add new point
+  pathPoints.push(pos.copy());
+  // Trim if too long
+  if (pathPoints.length > maxPathLength) {
+    pathPoints.shift();
+  }
+  // Draw path
+  stroke(255, 0, 0);
+  strokeWeight(2);
+  for (let i = 1; i < pathPoints.length; i++) {
+    let p0 = pathPoints[i-1];
+    let p1 = pathPoints[i];
+    line(
+      width/2 + p0.x * unitSize,
+      height/2 + p0.y * unitSize,
+      width/2 + p1.x * unitSize,
+      height/2 + p1.y * unitSize
+    );
+  }
+}
+
+function drawAxes(pos, segStart, now) {
+  // Determine if blinking
+  const blinking = isBlinking && (now - blinkStart < blinkDuration);
+  if (!blinking) {
+    isBlinking = false;
+  }
+
+  // Draw axes lines
+  stroke(blinking ? color(255, 0, 0) : 0);
+  strokeWeight(1);
+  push();
+  translate(width/2 + pos.x * unitSize, height/2 + pos.y * unitSize);
+  line(-unitRange * unitSize, 0, unitRange * unitSize, 0);
+  line(0, -unitRange * unitSize, 0, unitRange * unitSize);
+
+  // Draw labels
+  noStroke();
+  fill(blinking ? color(255, 0, 0) : 0);
+  textAlign(CENTER, CENTER);
+  textSize(12);
+  text(`-X`, -unitRange * unitSize, -10);
+  text(`+X`, unitRange * unitSize, -10);
+  text(`+Y`, -10, -unitRange * unitSize);
+  text(`-Y`, -10, unitRange * unitSize);
+
+  // Draw coordinate label above corner
+  text(`(${segStart.x}, ${segStart.y})`, 0, -20);
+  pop();
+}
